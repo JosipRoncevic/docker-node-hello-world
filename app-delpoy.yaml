@@ -1,0 +1,41 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-node-hello-world
+spec:
+  selector:
+    matchLabels:
+      app: docker-node-hello-world
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: docker-node-hello-world
+    spec:
+      containers:
+      - name: docker-node-hello-world
+        image: eu-frankfurt-1.ocir.io/fr1ie1pznths/hostname-node-app:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-node-hello-world-lb
+  labels:
+    app: docker-node-hello-world
+  annotations:
+    service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+    service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+spec:
+  type: LoadBalancer
+  selector:
+    app: docker-node-hello-world
+  ports:
+    - protocol: TCP
+      port: 8080
