@@ -1,3 +1,4 @@
+
 name: cicd-demo
 
 on:
@@ -21,14 +22,14 @@ jobs:
       - name: "Start build job"
         run: echo "Starting the build job."
 
-      - name: Checkout
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Get or create an OCIR Repository
         uses: oracle-actions/get-ocir-repository@v1.2.1
         id: get-ocir-repository
         with:
-          name: "novirepo/mojrepo"
+          name: "hostname-node-app"
           compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
       - name: Log into OCIR
@@ -37,42 +38,15 @@ jobs:
         with:
           auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: oracle
-          java-version: 17
-
-      - name: Check Java Version
-        run: java --version
-
-      - name: Assemble JAR
-        run: mvn package
-
-      - name: Get Version Number
-        run: |
-          echo "VERSION=$(mvn --version | grep 'Apache Maven' | awk '{print $3}')" >> $GITHUB_ENV
-
-      - name: Test
-        run: |
-          echo $GITHUB_ENV
-          echo ${{ env.VERSION }}
-
-      - name: Publish JAR
-        uses: actions/upload-artifact@v4.3.3
-        with:
-          name: 'cicd-demo-${{ env.VERSION }}-SNAPSHOT.jar'
-          path: target/*-SNAPSHOT.jar
-
       - name: Docker Build
         id: docker-build
         run: |
-          docker build -t fra.ocir.io/fr1ie1pznths/novirepo/mojrepo:latest .
+          docker build -t fra.ocir.io/fr1ie1pznths/hostname-node-app:latest .
 
       - name: Docker Push
         id: docker-push
         run: |
-          docker push fra.ocir.io/fr1ie1pznths/novirepo/mojrepo:latest
+          docker push fra.ocir.io/fr1ie1pznths/hostname-node-app:latest
 
   deploy-job:
     name: Deploy Job
@@ -93,4 +67,5 @@ jobs:
           cluster: ${{ secrets.OKE_CLUSTER_OCID }}
 
       - name: Run Kubectl
-        run: kubectl apply -f app-delpoy.yaml
+        run: kubectl apply -f app-deploy.yaml
+
